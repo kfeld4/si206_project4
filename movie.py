@@ -70,7 +70,7 @@ def get_movie_web_data_using_cache(web_base_url):
     else:
         resp = requests.get(web_base_url)
         MOVIE_WEB_CACHE_DICTION[unique_key] = resp.text
-        fref =  open('CACHE__WEB_MOVIE', 'w')
+        fref =  open('CACHE_WEB_MOVIE', 'w')
         dumped_data = json.dumps(MOVIE_WEB_CACHE_DICTION)
         fref.write(dumped_data)
         fref.close()
@@ -115,7 +115,6 @@ def get_movie_data(movie_id):
     req = get_movie_DB_data_using_cache(baseurl, params=params)
     movie_data = json.loads(req)
     return (movie_data)
-
 
 def init_db():
     try:
@@ -166,37 +165,40 @@ def init_db():
 
 
 def insert_stuff():
-
     conn = sqlite3.connect(DBNAME)
     cur = conn.cursor()
 
     informations = get_info_for_movies(web_base_url)
-    scrap_movie_titles = []
+    scrape_movie_titles = []
     for inst in informations:
         Web_Title = inst[0]
         if ("(") in Web_Title:
             Web_Title = Web_Title[:-7]
-            scrap_movie_titles.append(Web_Title)
+            scrape_movie_titles.append(Web_Title)
         elif Web_Title == "Marvel's The Avengers":
             Web_Title = "The Avengers"
-            scrap_movie_titles.append(Web_Title)
+            scrape_movie_titles.append(Web_Title)
         elif "Hallows" in Web_Title:
             Web_Title = Web_Title.replace("Hallows","Hallows:")
-            scrap_movie_titles.append(Web_Title)
-        elif Web_Title == "The Dark Knight":
-            Web_Title = "The Dark Knight Rises"
-            scrap_movie_titles.append(Web_Title)
+            scrape_movie_titles.append(Web_Title)
         elif "Breaking" in Web_Title:
             Web_Title = Web_Title.replace("Dawn", "Dawn -")
-            scrap_movie_titles.append(Web_Title)
+            scrape_movie_titles.append(Web_Title)
         elif "Fantastic" in Web_Title:
             Web_Title = Web_Title.replace("To","to")
-            scrap_movie_titles.append(Web_Title)
+            scrape_movie_titles.append(Web_Title)
         elif Web_Title == "E.T.: The Extra-Terrestrial":
             Web_Title = ("E.T. the Extra-Terrestrial")
-            scrap_movie_titles.append(Web_Title)
+            scrape_movie_titles.append(Web_Title)
+        elif Web_Title == 'Harry Potter and the Sorcerer':
+            Web_Title = ('Harry Potter and the Sorcerer\'s Stone')
+            scrape_movie_titles.append(Web_Title)
+        elif Web_Title == "The Dark Knight":
+            Web_Title = ("The Dark Knight")
+            scrape_movie_titles.append(Web_Title)
         else:
-            scrap_movie_titles.append(Web_Title)
+            scrape_movie_titles.append(Web_Title)
+
         Studio = inst[1]
         WorldwideGross = inst[2]
         if WorldwideGross.__contains__(","):
@@ -219,6 +221,7 @@ def insert_stuff():
         Year = inst[7]
         if len(Year) == 5:
             Year = Year[:4]
+
         insertion = (None, Web_Title, Studio, WorldwideGross[1:], DomesticGross[1:], OverseasGross[1:], Year)
         statement = 'INSERT INTO "Movie_Revenue" '
         statement += 'VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -236,7 +239,7 @@ def insert_stuff():
 
     movie_ids =[]
     count = 1
-    for movie in scrap_movie_titles:
+    for movie in scrape_movie_titles:
         if count == 39 or count == 78:
             time.sleep(11)
         id = search_movie("'" + movie + "'")
@@ -251,7 +254,6 @@ def insert_stuff():
         data = get_movie_data(str(movie_id))
         informations2.append(data)
         count += 1
-    DB_Title = []
     for inst in informations2:
         try:
             Title = inst["title"]
@@ -285,21 +287,22 @@ def insert_stuff():
         cur.execute(statement, insertion)
     conn.commit()
 
-def stacked_bar_graph(movie_title):
+def gross_bar_graph(movie_title):
     try:
         conn = sqlite3.connect(DBNAME)
         cur = conn.cursor()
     except:
         print ("An error has occured.")
 
-    statement = 'SELECT DomesticGross, OverseasGross FROM Movie_Revenue'
-    statement += ' WHERE Title = ' + "'" + movie_title + "'"
+    statement = "SELECT DomesticGross, OverseasGross FROM Movie_Revenue"
+    statement += " WHERE Title = " + '"' + movie_title + '"'
 
     cur.execute(statement)
     conn.commit()
     for row in cur:
         y = row[0]
         y1 = row[1]
+
 
     trace1 = go.Bar(
         y = y,
@@ -309,16 +312,14 @@ def stacked_bar_graph(movie_title):
         y = y1,
         name='Overseas Gross'
     )
-
     data = [trace1, trace2]
     layout = go.Layout(
         barmode='stack',
-        title="Worldwide Gross ($) for " + movie_title, xaxis={'title':'Movie'},
+        title="Worldwide Gross For " + movie_title, xaxis={'title':'Movie'},
         yaxis={'title':'Total Gross ($)'},
     )
     fig = go.Figure(data=data, layout=layout)
     py.plot(fig, filename='gross-bar-graph')
-
 
 def production_bar_graph():
     studio_data = []
@@ -329,7 +330,11 @@ def production_bar_graph():
     except:
         print ("An error has occured.")
 
-    statement = 'SELECT Movie_Revenue.Studio, AVG(Movie.Budget) FROM Movie_Revenue JOIN MOVIE ON Movie_Revenue.Id = Movie.MovieId GROUP BY Studio ORDER BY AVG(Budget) ASC'
+    statement = '''
+        SELECT Movie_Revenue.Studio, AVG(Movie.Budget) FROM Movie_Revenue
+        JOIN MOVIE ON Movie_Revenue.Id = Movie.MovieId GROUP BY Studio
+        ORDER BY AVG(Budget) ASC
+        '''
 
     cur.execute(statement)
     conn.commit()
@@ -352,7 +357,7 @@ def production_bar_graph():
     layout = go.Layout(
         xaxis=dict(tickangle=-45),
         barmode='group',
-        title="Average Movie Budget for Production Companies",
+        title="Average Movie Budgets",
         yaxis={'title':'Budget ($)'},
     )
 
@@ -360,8 +365,8 @@ def production_bar_graph():
     py.plot(fig, filename='angled-text-bar')
 
 def movies_produced(Year):
-    year_data = []
     studio_data = []
+    year_data = []
     try:
         conn = sqlite3.connect(DBNAME)
         cur = conn.cursor()
@@ -374,14 +379,17 @@ def movies_produced(Year):
     cur.execute(statement)
     conn.commit()
     for row in cur:
-        year_data.append(row[0])
-        studio_data.append(row[1])
-    labels = year_data
-    values = studio_data
+        studio_data.append(studio_dict[row[0]])
+        year_data.append(row[1])
+    labels = studio_data
+    values = year_data
 
-    trace = go.Pie(labels=labels, values=values)
+    data = go.Pie(labels=labels, values=values)
+    layout = go.Layout(title = "Percent of Movies Produced by Studios in " + Year)
 
-    py.plot([trace], filename='basic_pie_chart')
+    fig = go.Figure(data=[data], layout=layout)
+
+    py.plot(fig, filename='basic_pie_chart')
 
 def runtime_rating():
     title_data = []
@@ -393,7 +401,10 @@ def runtime_rating():
     except:
         print ("An error has occured.")
 
-    statement = "SELECT Movie_Revenue.Title, Movie.RunTime, Movie.VoteAverage FROM Movie_Revenue JOIN MOVIE ON Movie_Revenue.Id = Movie.MovieId"
+    statement = '''
+        SELECT Movie_Revenue.Title, Movie.RunTime, Movie.VoteAverage
+        FROM Movie_Revenue JOIN MOVIE ON Movie_Revenue.Id = Movie.MovieId
+        '''
 
     cur.execute(statement)
     conn.commit()
@@ -402,28 +413,20 @@ def runtime_rating():
         run_data.append(row[1])
         rating_data.append(row[2])
 
-    # Create a trace
     trace = go.Scatter(
         x = run_data,
         y = rating_data,
         text= title_data,
         mode = 'markers'
     )
-
     data = [trace]
-    # layout = go.Layout(
-    #     title="Scatterplot for Runtime and Ratings",
-    #     yaxis={'title':'Average Rating'},
-    #     xaxis={'title':'Runtime (Minutes)'},
-    # )
-
     layout = go.Layout({
       "autosize": False,
       "font": {"family": "Balto"},
       "height": 500,
       "hovermode": "closest",
       "plot_bgcolor": "rgba(240,240,240,0.9)",
-      "title": "Scatterplot for Runtime and Ratings",
+      "title": "Scatterplot For Runtime and Rating",
       "width": 700,
       "xaxis": {
         "gridcolor": "rgb(255,255,255)",
@@ -450,20 +453,19 @@ def runtime_rating():
     py.plot(fig, filename='basic-scatter')
 
 if __name__=="__main__":
-
     try:
         conn = sqlite3.connect(DBNAME)
         cur = conn.cursor()
     except:
         print ("An error has occured.")
 
-    print ("\nAnalyzing Data From the 100 Top Grossing Films of All Time")
-    request = input("\nTo begin, enter 'list movies': ").lower()
+    print ("\nAnalyzing Data: Top 100 Grossing Movies of All Time")
+    request = input("\nEnter a command (or 'help' for options): ").lower()
+    movie_numbers = {}
+    movie_rankings = []
+    year_list = []
     while True:
-        if request == "list movies":
-            movie_numbers = {}
-            movie_rankings = []
-            year_list = []
+        if request == "worldwide gross":
             movie_count = 0
             print ("\nTop 100 Movies\n")
             statement = "SELECT Title, Year FROM Movie_Revenue"
@@ -479,69 +481,71 @@ if __name__=="__main__":
                 movie_count += 1
                 movie_numbers[movie_count] = movie.Title
                 print (str(movie_count) + ' ' + movie.__str__())
-            request = input("\nEnter a command (or 'help' for options): ").lower()
-            if request == "exit":
-                break
-            while True:
-                if request == "exit":
-                    break
-                elif request == "worldwide gross":
-                    request2 = input("\nSelect a number to learn more about a specific movie's worldwide gross: ")
-                    if int(request2) in movie_numbers:
-                        movie_title = movie_numbers[int(request2)]
-                        print ("\nRetrieving graph for: " + movie_title)
-                        stacked_bar_graph(str(movie_title))
-                    else:
-                        print ("Sorry, that is not a valid input.")
-                elif request == "average budget":
-                    print ("\nRetrieving bar graph for average budgets")
-                    production_bar_graph()
-                elif request == "films per year by company":
-                    request2 = input("\nInput a year: ")
-                    if int(request2) in year_list:
-                        print ("\nRetrieving graph for " + request2)
-                        movies_produced(request2)
-                    else:
-                        print ("No top film was produced that year.")
-                elif request == "runtimes and ratings":
-                    print ("\nRetrieving scatter plot for runtimes and ratings for each movie")
-                    runtime_rating()
-                elif request == "create database":
-                    init_db()
-                    insert_stuff()
-                elif request == "help":
-                    print ("""
-                      worldwide gross
-                      <movie title>
-                           presents a stacked bar chart that compares the domestic
-                           and overseas grosses as portions of overall worldwide gross
-                           for each movie
+            request2 = input("\nSelect a number to learn more about a specific movie's worldwide gross: ")
+            if int(request2) in movie_numbers:
+                movie_title = movie_numbers[int(request2)]
+                print ("Retrieving graph for: " + movie_title)
+                gross_bar_graph(str(movie_title))
+                print("---")
+                print("To see this graph for another movie, type 'worldwide gross' again and then select the movie number.")
+            else:
+                print ("Sorry, that is not a valid number.")
+                print("---")
+                print("To see this graph for another movie, type 'worldwide gross' again and then select the movie number.")
+        elif request == "average budgets":
+            print ("Retrieving bar graph")
+            production_bar_graph()
+        elif request == "movies per year":
+            request2 = input("\nInput a year: ")
+            if int(request2) in year_list:
+                print ("Retrieving graph for " + request2)
+                movies_produced(request2)
+                print("---")
+                print("To see this graph for another year, type 'movies per year' again and then input a year")
+            else:
+                print ("I'm sorry. No top movies were produced that year.")
+                print("---")
+                print("To see this graph for another year, type 'movies per year' again and then input a year")
+        elif request == "runtime and rating":
+            print ("Retrieving scatter plot")
+            runtime_rating()
+        elif request == "create database":
+            init_db()
+            insert_stuff()
+        elif request == "exit":
+            break
+        elif request == "help":
+            print ("""
+                worldwide gross
+                Follow up question: <number> of movie title
+                    1. displays the top 100 movies in rank of worldwide gross
 
-                       average budget
-                           presents a bar chart comparing the average film budget for
-                           each production company
+                    2. presents a stacked bar chart that compares the domestic
+                       and overseas grosses as portions of overall worldwide gross
+                       for each movie
 
-                       films per year by company
-                       <year>
-                           presents a pie chart comparing the number of films produced
-                           by their respective production companies grouped by year
+                average budgets
+                    presents a bar chart comparing the average movie budget for
+                    each production company
 
-                       runtimes and ratings
-                           presents a scatter plot of runtime and rating for every
-                           movie
+                movies per year
+                Follow up question: <year>
+                    presents a pie chart comparing the number of movies produced
+                    by their respective production companies grouped by year
 
-                       create database
-                           creates and populates the databases
+                runtime and rating
+                    presents a scatterplot of runtime and rating for every
+                    movie
 
-                       exit
-                           exits the program
+                create database
+                    creates and populates the databases
 
-                       help
-                           lists available commands (these instructions)
-                    """)
-                else:
-                    print ("Sorry, that is not a valid request. If needed, enter 'help' for options.")
-                request = input("\nEnter a command (or 'help' for options): ").lower()
+                exit
+                    exits the program
+
+                help
+                    lists available commands (these instructions)
+            """)
         else:
-            print ("I'm, sorry. That request is not recognized.")
-            request = input("\nTo begin, enter 'list movies': ").lower()
+            print ("Sorry, that is not a valid request. If needed, enter 'help' for options.")
+        request = input("\nEnter a command (or 'help' for options): ").lower()
