@@ -5,7 +5,7 @@ The two data sources used for this project include:
   1. The Movie Database API (https://www.themoviedb.org/documentation/api)
      The Movie Database API requires an API key, which can be received at the above URL, and should be placed in a secrets.py file.
 
-  2. A Single Scraped Page ((http://www.boxofficemojo.com/alltime/world/?pagenum=1&sort=rank&order=ASC&p=p=.htm),
+  2. A Single Scraped Page (http://www.boxofficemojo.com/alltime/world/?pagenum=1&sort=rank&order=ASC&p=p=.htm),
      which shares worldwide, domestic, and overseas grosses for the top 100 grossing Movies of all time.
 
  Program Structure:
