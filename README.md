@@ -11,7 +11,7 @@ The two data sources used for this project include:
  Program Structure:
  An interactive command line that displays each type of graph.
  Outlined below is the 'help' option to get a sense of the program's structure and its presentation options.
- 
+
          worldwide gross
          Follow up question: <number> of movie title
              1. displays the top 100 movies in rank of worldwide gross
@@ -50,9 +50,8 @@ Setting Up Plot.ly for Graphs:
   3. Next, grab your api key (Click your account name in the upper right > settings > navigate to API keys). From
      here, click regenerate key and copy the key.
 
-  4. Now, you will need to setup your plotly credentials file.  To do this, go to your terminal and enter the
-     python shell (type 'python' or 'python3' depending on what you normally use).  
-     You will see something like this:
+  4. Now, you will need to setup your plotly credentials file.  To do this, go to your terminal and
+     enter the python shell (type 'python' or 'python3' depending on what you normally use).  
 
   5. First, type in:
      import plotly
@@ -74,7 +73,7 @@ Steps to Collect Data:
 
   4. With movie id as the parameter, use the GET '/movie/{movie_id}' request to retrieve details about each movie.
      (method: get_movie_data(movie_id))
-     Pull the following information: production company, budget, genre, runtime, and voting average
+     Pull the following information: production company, budget, genre, runtime, and voting average.
      This information will be stored in and populate a single table in your DB.
 
   5. Connect the two DB tables on the title of the movie.
