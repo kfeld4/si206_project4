@@ -464,19 +464,19 @@ if __name__=="__main__":
     movie_numbers = {}
     movie_rankings = []
     year_list = []
+    statement = "SELECT Title, Year FROM Movie_Revenue"
+    cur.execute(statement)
+    conn.commit()
+    for row in cur:
+        Title = row[0]
+        Year = row[1]
+        year_list.append(Year)
+        movie_data = MovieRankings(Title, Year)
+        movie_rankings.append(movie_data)
     while True:
         if request == "worldwide gross":
             movie_count = 0
             print ("\nTop 100 Movies\n")
-            statement = "SELECT Title, Year FROM Movie_Revenue"
-            cur.execute(statement)
-            conn.commit()
-            for row in cur:
-                Title = row[0]
-                Year = row[1]
-                year_list.append(Year)
-                movie_data = MovieRankings(Title, Year)
-                movie_rankings.append(movie_data)
             for movie in movie_rankings:
                 movie_count += 1
                 movie_numbers[movie_count] = movie.Title
@@ -501,13 +501,13 @@ if __name__=="__main__":
                 print ("Retrieving graph for " + request2)
                 movies_produced(request2)
                 print("---")
-                print("To see this graph for another year, type 'movies per year' again and then input a year")
+                print("To see this graph for another year, type 'movies per year' again and then input a year.")
             else:
                 print ("I'm sorry. No top movies were produced that year.")
                 print("---")
-                print("To see this graph for another year, type 'movies per year' again and then input a year")
+                print("To see this graph for another year, type 'movies per year' again and then input a year.")
         elif request == "runtime and rating":
-            print ("Retrieving scatter plot")
+            print ("Retrieving scatterplot")
             runtime_rating()
         elif request == "create database":
             init_db()
